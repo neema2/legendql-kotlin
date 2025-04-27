@@ -2,6 +2,7 @@ package org.finos.legendql.kotlin.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
 /**
  * Base interface for all literals in the metamodel
@@ -18,6 +19,24 @@ data class IntegerLiteral(val value: Int) : Literal<Int> {
     override fun value(): Int = value
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
         visitor.visitIntegerLiteral(this, parameter)
+}
+
+/**
+ * Long literal implementation
+ */
+data class LongLiteral(val value: Long) : Literal<Long> {
+    override fun value(): Long = value
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitLongLiteral(this, parameter)
+}
+
+/**
+ * Double literal implementation
+ */
+data class DoubleLiteral(val value: Double) : Literal<Double> {
+    override fun value(): Double = value
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitDoubleLiteral(this, parameter)
 }
 
 /**
@@ -68,6 +87,30 @@ class CountFunction : Function {
 class AverageFunction : Function {
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
         visitor.visitAverageFunction(this, parameter)
+}
+
+/**
+ * Sum function implementation
+ */
+class SumFunction : Function {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitSumFunction(this, parameter)
+}
+
+/**
+ * Min function implementation
+ */
+class MinFunction : Function {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitMinFunction(this, parameter)
+}
+
+/**
+ * Max function implementation
+ */
+class MaxFunction : Function {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitMaxFunction(this, parameter)
 }
 
 /**
@@ -151,11 +194,27 @@ class GreaterThanEqualsBinaryOperator : BinaryOperator {
 }
 
 /**
+ * GREATER THAN OR EQUAL binary operator implementation
+ */
+class GreaterThanOrEqualBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitGreaterThanEqualsBinaryOperator(GreaterThanEqualsBinaryOperator(), parameter)
+}
+
+/**
  * LESS THAN binary operator implementation
  */
 class LessThanBinaryOperator : BinaryOperator {
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
         visitor.visitLessThanBinaryOperator(this, parameter)
+}
+
+/**
+ * LESS THAN OR EQUAL binary operator implementation
+ */
+class LessThanOrEqualBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitLessThanEqualsBinaryOperator(LessThanEqualsBinaryOperator(), parameter)
 }
 
 /**
@@ -223,11 +282,27 @@ class AddBinaryOperator : BinaryOperator {
 }
 
 /**
+ * ADDITION binary operator implementation (alias for ADD)
+ */
+class AdditionBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitAddBinaryOperator(AddBinaryOperator(), parameter)
+}
+
+/**
  * MULTIPLY binary operator implementation
  */
 class MultiplyBinaryOperator : BinaryOperator {
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
         visitor.visitMultiplyBinaryOperator(this, parameter)
+}
+
+/**
+ * MULTIPLICATION binary operator implementation (alias for MULTIPLY)
+ */
+class MultiplicationBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitMultiplyBinaryOperator(MultiplyBinaryOperator(), parameter)
 }
 
 /**
@@ -239,11 +314,27 @@ class SubtractBinaryOperator : BinaryOperator {
 }
 
 /**
+ * SUBTRACTION binary operator implementation (alias for SUBTRACT)
+ */
+class SubtractionBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitSubtractBinaryOperator(SubtractBinaryOperator(), parameter)
+}
+
+/**
  * DIVIDE binary operator implementation
  */
 class DivideBinaryOperator : BinaryOperator {
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
         visitor.visitDivideBinaryOperator(this, parameter)
+}
+
+/**
+ * DIVISION binary operator implementation (alias for DIVIDE)
+ */
+class DivisionBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitDivideBinaryOperator(DivideBinaryOperator(), parameter)
 }
 
 /**
@@ -507,7 +598,7 @@ data class GroupByClause(val expression: Expression) : Clause {
  */
 data class GroupByExpression(
     val selections: List<Expression>,
-    val expressions: List<Expression>,
+    val groupBy: List<Expression>,
     val having: Expression? = null
 ) : Expression {
     override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
@@ -626,69 +717,27 @@ data class DataFrame<T>(
 }
 
 /**
- * Execution visitor interface for the visitor pattern
+ * Aggregate type enum for aggregation functions
  */
-interface ExecutionVisitor<P, R> {
-    fun visitRuntime(runtime: Runtime, parameter: P): R
-    fun visitFromClause(fromClause: FromClause, parameter: P): R
-    fun visitIntegerLiteral(integerLiteral: IntegerLiteral, parameter: P): R
-    fun visitStringLiteral(stringLiteral: StringLiteral, parameter: P): R
-    fun visitDateLiteral(dateLiteral: DateLiteral, parameter: P): R
-    fun visitBooleanLiteral(booleanLiteral: BooleanLiteral, parameter: P): R
-    fun visitOperandExpression(operandExpression: OperandExpression, parameter: P): R
-    fun visitNotUnaryOperator(notUnaryOperator: NotUnaryOperator, parameter: P): R
-    fun visitEqualsBinaryOperator(equalsBinaryOperator: EqualsBinaryOperator, parameter: P): R
-    fun visitNotEqualsBinaryOperator(notEqualsBinaryOperator: NotEqualsBinaryOperator, parameter: P): R
-    fun visitGreaterThanBinaryOperator(greaterThanBinaryOperator: GreaterThanBinaryOperator, parameter: P): R
-    fun visitGreaterThanEqualsBinaryOperator(greaterThanEqualsBinaryOperator: GreaterThanEqualsBinaryOperator, parameter: P): R
-    fun visitLessThanBinaryOperator(lessThanBinaryOperator: LessThanBinaryOperator, parameter: P): R
-    fun visitLessThanEqualsBinaryOperator(lessThanEqualsBinaryOperator: LessThanEqualsBinaryOperator, parameter: P): R
-    fun visitAndBinaryOperator(andBinaryOperator: AndBinaryOperator, parameter: P): R
-    fun visitOrBinaryOperator(orBinaryOperator: OrBinaryOperator, parameter: P): R
-    fun visitAddBinaryOperator(addBinaryOperator: AddBinaryOperator, parameter: P): R
-    fun visitMultiplyBinaryOperator(multiplyBinaryOperator: MultiplyBinaryOperator, parameter: P): R
-    fun visitSubtractBinaryOperator(subtractBinaryOperator: SubtractBinaryOperator, parameter: P): R
-    fun visitDivideBinaryOperator(divideBinaryOperator: DivideBinaryOperator, parameter: P): R
-    fun visitLiteralExpression(literalExpression: LiteralExpression, parameter: P): R
-    fun visitVariableAliasExpression(variableAliasExpression: VariableAliasExpression, parameter: P): R
-    fun visitComputedColumnAliasExpression(computedColumnAliasExpression: ComputedColumnAliasExpression, parameter: P): R
-    fun visitColumnAliasExpression(columnAliasExpression: ColumnAliasExpression, parameter: P): R
-    fun visitFunctionExpression(functionExpression: FunctionExpression, parameter: P): R
-    fun visitMapReduceExpression(mapReduceExpression: MapReduceExpression, parameter: P): R
-    fun visitLambdaExpression(lambdaExpression: LambdaExpression, parameter: P): R
-    fun visitCountFunction(countFunction: CountFunction, parameter: P): R
-    fun visitAverageFunction(averageFunction: AverageFunction, parameter: P): R
-    fun visitModuloFunction(moduloFunction: ModuloFunction, parameter: P): R
-    fun visitExponentFunction(exponentFunction: ExponentFunction, parameter: P): R
-    fun visitFilterClause(filterClause: FilterClause, parameter: P): R
-    fun visitSelectionClause(selectionClause: SelectionClause, parameter: P): R
-    fun visitExtendClause(extendClause: ExtendClause, parameter: P): R
-    fun visitGroupByClause(groupByClause: GroupByClause, parameter: P): R
-    fun visitGroupByExpression(groupByExpression: GroupByExpression, parameter: P): R
-    fun visitDistinctClause(distinctClause: DistinctClause, parameter: P): R
-    fun visitOrderByClause(orderByClause: OrderByClause, parameter: P): R
-    fun visitLimitClause(limitClause: LimitClause, parameter: P): R
-    fun visitJoinExpression(joinExpression: JoinExpression, parameter: P): R
-    fun visitJoinClause(joinClause: JoinClause, parameter: P): R
-    fun visitInnerJoinType(innerJoinType: InnerJoinType, parameter: P): R
-    fun visitLeftJoinType(leftJoinType: LeftJoinType, parameter: P): R
-    fun visitColumnReferenceExpression(columnReferenceExpression: ColumnReferenceExpression, parameter: P): R
-    fun visitIfExpression(ifExpression: IfExpression, parameter: P): R
-    fun visitOrderByExpression(orderByExpression: OrderByExpression, parameter: P): R
-    fun visitAscendingOrderType(ascendingOrderType: AscendingOrderType, parameter: P): R
-    fun visitDescendingOrderType(descendingOrderType: DescendingOrderType, parameter: P): R
-    fun visitRenameClause(renameClause: RenameClause, parameter: P): R
-    fun visitOffsetClause(offsetClause: OffsetClause, parameter: P): R
-    fun visitUnaryExpression(unaryExpression: UnaryExpression, parameter: P): R
-    fun visitBinaryExpression(binaryExpression: BinaryExpression, parameter: P): R
-    fun visitInBinaryOperator(inBinaryOperator: InBinaryOperator, parameter: P): R
-    fun visitNotInBinaryOperator(notInBinaryOperator: NotInBinaryOperator, parameter: P): R
-    fun visitIsBinaryOperator(isBinaryOperator: IsBinaryOperator, parameter: P): R
-    fun visitIsNotBinaryOperator(isNotBinaryOperator: IsNotBinaryOperator, parameter: P): R
-    fun visitBitwiseAndBinaryOperator(bitwiseAndBinaryOperator: BitwiseAndBinaryOperator, parameter: P): R
-    fun visitBitwiseOrBinaryOperator(bitwiseOrBinaryOperator: BitwiseOrBinaryOperator, parameter: P): R
-    fun visitLikeBinaryOperator(likeBinaryOperator: LikeBinaryOperator, parameter: P): R
-    fun visitIsNullBinaryOperator(isNullBinaryOperator: IsNullBinaryOperator, parameter: P): R
-    fun visitIsNotNullBinaryOperator(isNotNullBinaryOperator: IsNotNullBinaryOperator, parameter: P): R
-    fun visitNullExpression(nullExpression: NullExpression, parameter: P): R
+enum class AggregateType {
+    COUNT,
+    SUM,
+    AVG,
+    MIN,
+    MAX
 }
+
+/**
+ * Aggregate expression implementation
+ */
+data class AggregateExpression(
+    val type: AggregateType,
+    val expression: Expression
+) : Expression {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitAggregateExpression(this, parameter)
+}
+
+/**
+ * Execution visitor interface for the visitor pattern is defined in ExecutionVisitor.kt
+ */

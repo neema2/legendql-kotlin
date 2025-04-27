@@ -31,6 +31,13 @@ class Column<T>(
     fun references(otherTable: Table<*>): Column<T> {
         return this
     }
+    
+    /**
+     * Create an average aggregation
+     */
+    fun avg(): FunctionExpression {
+        return FunctionExpression(AverageFunction(), listOf(ColumnReferenceExpression(name)))
+    }
 }
 
 // Extension operator functions for comparison
@@ -82,7 +89,7 @@ enum class ComparisonType {
  * Equals operator (==)
  * This implements the Kotlin operator overloading for equality
  */
-operator fun <T> Column<T>.equals(other: Any?): Boolean {
+fun <T> Column<T>.equals(other: Any?): Boolean {
     // Create the binary expression directly
     val valueExpr = when (other) {
         is Int -> LiteralExpression(IntegerLiteral(other))
@@ -160,6 +167,17 @@ infix fun <T> Column<T>.eq(value: T): BinaryExpression {
     return BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(valueExpr),
+        EqualsBinaryOperator()
+    )
+}
+
+/**
+ * Equals operator for comparing two columns
+ */
+infix fun <T> Column<T>.eq(other: Column<T>): BinaryExpression {
+    return BinaryExpression(
+        OperandExpression(this.asExpression()),
+        OperandExpression(other.asExpression()),
         EqualsBinaryOperator()
     )
 }

@@ -30,7 +30,7 @@ object Parser {
         return when (parseType) {
             ParseType.SELECT -> {
                 val expressions = when (expression) {
-                    is List<*> -> expression.filterIsInstance<ColumnExpression>().map { 
+                    is List<*> -> expression.filterIsInstance<ColumnReferenceExpression>().map { 
                         ColumnReferenceExpression("column") 
                     }
                     else -> listOf(ColumnReferenceExpression("column"))
@@ -39,7 +39,7 @@ object Parser {
             }
             ParseType.EXTEND -> {
                 val expressions = when (expression) {
-                    is List<*> -> expression.filterIsInstance<ColumnExpression>().map { 
+                    is List<*> -> expression.filterIsInstance<ColumnReferenceExpression>().map { 
                         ComputedColumnAliasExpression("column", ColumnReferenceExpression("column")) 
                     }
                     else -> listOf(ComputedColumnAliasExpression("column", ColumnReferenceExpression("column")))
@@ -48,7 +48,7 @@ object Parser {
             }
             ParseType.RENAME -> {
                 val expressions = when (expression) {
-                    is List<*> -> expression.filterIsInstance<ColumnExpression>().map { 
+                    is List<*> -> expression.filterIsInstance<ColumnReferenceExpression>().map { 
                         ColumnAliasExpression("newColumn", ColumnReferenceExpression("column")) 
                     }
                     else -> listOf(ColumnAliasExpression("newColumn", ColumnReferenceExpression("column")))

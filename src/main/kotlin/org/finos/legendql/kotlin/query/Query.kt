@@ -1,6 +1,7 @@
 package org.finos.legendql.kotlin.query
 
 import org.finos.legendql.kotlin.model.*
+import kotlin.reflect.KClass
 
 /**
  * Represents a query with clauses that can be executed by a runtime
@@ -105,6 +106,24 @@ class Query(
         having: Expression? = null
     ): Query {
         addClause(GroupByClause(GroupByExpression(selections, groupBy, having)))
+        return this
+    }
+    
+    /**
+     * Add a having clause to a group by
+     */
+    fun having(expression: Expression): Query {
+        // Find the last GroupByClause and update its having expression
+        val lastGroupByClause = clauses.lastOrNull { it is GroupByClause } as? GroupByClause
+        if (lastGroupByClause != null) {
+            val groupByExpr = lastGroupByClause.expression as GroupByExpression
+            val updatedGroupByExpr = GroupByExpression(
+                groupByExpr.selections,
+                groupByExpr.groupBy,
+                expression
+            )
+            clauses[clauses.lastIndexOf(lastGroupByClause)] = GroupByClause(updatedGroupByExpr)
+        }
         return this
     }
 

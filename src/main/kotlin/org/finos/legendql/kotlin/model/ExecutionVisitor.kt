@@ -22,6 +22,8 @@ interface ExecutionVisitor<P, R> {
     
     // Literals
     fun visitIntegerLiteral(integerLiteral: IntegerLiteral, parameter: P): R
+    fun visitLongLiteral(longLiteral: LongLiteral, parameter: P): R
+    fun visitDoubleLiteral(doubleLiteral: DoubleLiteral, parameter: P): R
     fun visitStringLiteral(stringLiteral: StringLiteral, parameter: P): R
     fun visitDateLiteral(dateLiteral: DateLiteral, parameter: P): R
     fun visitBooleanLiteral(booleanLiteral: BooleanLiteral, parameter: P): R
@@ -31,6 +33,9 @@ interface ExecutionVisitor<P, R> {
     fun visitAverageFunction(averageFunction: AverageFunction, parameter: P): R
     fun visitModuloFunction(moduloFunction: ModuloFunction, parameter: P): R
     fun visitExponentFunction(exponentFunction: ExponentFunction, parameter: P): R
+    fun visitSumFunction(sumFunction: SumFunction, parameter: P): R
+    fun visitMinFunction(minFunction: MinFunction, parameter: P): R
+    fun visitMaxFunction(maxFunction: MaxFunction, parameter: P): R
     
     // Unary Operators
     fun visitNotUnaryOperator(notUnaryOperator: NotUnaryOperator, parameter: P): R
@@ -83,4 +88,5 @@ interface ExecutionVisitor<P, R> {
     fun visitGroupByExpression(groupByExpression: GroupByExpression, parameter: P): R
     fun visitJoinExpression(joinExpression: JoinExpression, parameter: P): R
     fun visitNullExpression(nullExpression: NullExpression, parameter: P): R
+    fun visitAggregateExpression(aggregateExpression: AggregateExpression, parameter: P): R
 }

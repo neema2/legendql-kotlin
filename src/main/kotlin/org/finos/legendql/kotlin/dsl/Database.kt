@@ -55,6 +55,16 @@ class QueryBuilder<E>(
     }
     
     /**
+     * Extend with computed columns
+     */
+    fun extend(expressions: List<ComputedColumnAliasExpression>): QueryBuilder<E> {
+        query.extend(expressions)
+        return this
+    }
+    
+    // Having method is already defined in the class
+    
+    /**
      * Filter rows using a condition
      */
     fun where(condition: () -> BinaryExpression): QueryBuilder<E> {
@@ -109,7 +119,18 @@ class QueryBuilder<E>(
             )
         }
         
-        query.having(expr)
+        // Find the last GroupByClause and update its having expression
+        val lastGroupByClause = query.clauses.lastOrNull { it is GroupByClause } as? GroupByClause
+        if (lastGroupByClause != null) {
+            val groupByExpr = lastGroupByClause.expression as GroupByExpression
+            val updatedGroupByExpr = GroupByExpression(
+                groupByExpr.selections,
+                groupByExpr.groupBy,
+                expr
+            )
+            query.clauses[query.clauses.lastIndexOf(lastGroupByClause)] = GroupByClause(updatedGroupByExpr)
+        }
+        
         return this
     }
     

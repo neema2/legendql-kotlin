@@ -266,9 +266,21 @@ class PureRelationExpressionVisitor : ExecutionVisitor<Unit, String> {
 
     override fun visitGroupByExpression(groupByExpression: GroupByExpression, parameter: Unit): String {
         val selections = groupByExpression.selections.joinToString(", ") { it.visit(this, parameter) }
-        val expressions = groupByExpression.expressions.joinToString(", ") { it.visit(this, parameter) }
+        val groupBy = groupByExpression.groupBy.joinToString(", ") { it.visit(this, parameter) }
         val having = groupByExpression.having?.let { ", ${it.visit(this, parameter)}" } ?: ""
-        return "[$expressions], [$selections]$having"
+        return "[$groupBy], [$selections]$having"
+    }
+    
+    override fun visitAggregateExpression(aggregateExpression: AggregateExpression, parameter: Unit): String {
+        val type = when (aggregateExpression.type) {
+            AggregateType.COUNT -> "count"
+            AggregateType.SUM -> "sum"
+            AggregateType.AVG -> "avg"
+            AggregateType.MIN -> "min"
+            AggregateType.MAX -> "max"
+        }
+        val expression = aggregateExpression.expression.visit(this, parameter)
+        return "$type($expression)"
     }
 
     override fun visitDistinctClause(distinctClause: DistinctClause, parameter: Unit): String {
@@ -386,5 +398,25 @@ class PureRelationExpressionVisitor : ExecutionVisitor<Unit, String> {
     
     override fun visitNullExpression(nullExpression: NullExpression, parameter: Unit): String {
         return "null"
+    }
+    
+    override fun visitLongLiteral(longLiteral: LongLiteral, parameter: Unit): String {
+        return longLiteral.value.toString() + "L"
+    }
+    
+    override fun visitDoubleLiteral(doubleLiteral: DoubleLiteral, parameter: Unit): String {
+        return doubleLiteral.value.toString()
+    }
+    
+    override fun visitSumFunction(sumFunction: SumFunction, parameter: Unit): String {
+        return "sum"
+    }
+    
+    override fun visitMinFunction(minFunction: MinFunction, parameter: Unit): String {
+        return "min"
+    }
+    
+    override fun visitMaxFunction(maxFunction: MaxFunction, parameter: Unit): String {
+        return "max"
     }
 }
