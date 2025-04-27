@@ -58,7 +58,19 @@ class QueryBuilder<E>(
      * Filter rows using a condition
      */
     fun where(condition: () -> BinaryExpression): QueryBuilder<E> {
-        val expr = condition()
+        // Clear any previous context
+        OperatorContext.clearContext()
+        
+        // Try to get the expression from the condition lambda
+        val expr = try {
+            condition()
+        } catch (e: UnsupportedOperationException) {
+            // If an exception was thrown, check if we have a captured expression
+            OperatorContext.getLastExpression() ?: throw RuntimeException(
+                "Failed to capture expression in where clause. Make sure you're using the DSL correctly.", e
+            )
+        }
+        
         query.filter(expr)
         return this
     }
@@ -84,7 +96,19 @@ class QueryBuilder<E>(
      * Add a having clause to a group by
      */
     fun having(condition: () -> BinaryExpression): QueryBuilder<E> {
-        val expr = condition()
+        // Clear any previous context
+        OperatorContext.clearContext()
+        
+        // Try to get the expression from the condition lambda
+        val expr = try {
+            condition()
+        } catch (e: UnsupportedOperationException) {
+            // If an exception was thrown, check if we have a captured expression
+            OperatorContext.getLastExpression() ?: throw RuntimeException(
+                "Failed to capture expression in having clause. Make sure you're using the DSL correctly.", e
+            )
+        }
+        
         query.having(expr)
         return this
     }
@@ -126,7 +150,19 @@ class QueryBuilder<E>(
             otherTable.getColumnsMetadata().toMutableMap()
         )
         
-        val expr = on()
+        // Clear any previous context
+        OperatorContext.clearContext()
+        
+        // Try to get the expression from the on lambda
+        val expr = try {
+            on()
+        } catch (e: UnsupportedOperationException) {
+            // If an exception was thrown, check if we have a captured expression
+            OperatorContext.getLastExpression() ?: throw RuntimeException(
+                "Failed to capture expression in join condition. Make sure you're using the DSL correctly.", e
+            )
+        }
+        
         query.join(
             database.name,
             otherTableModel.table,
@@ -149,7 +185,19 @@ class QueryBuilder<E>(
             otherTable.getColumnsMetadata().toMutableMap()
         )
         
-        val expr = on()
+        // Clear any previous context
+        OperatorContext.clearContext()
+        
+        // Try to get the expression from the on lambda
+        val expr = try {
+            on()
+        } catch (e: UnsupportedOperationException) {
+            // If an exception was thrown, check if we have a captured expression
+            OperatorContext.getLastExpression() ?: throw RuntimeException(
+                "Failed to capture expression in join condition. Make sure you're using the DSL correctly.", e
+            )
+        }
+        
         query.join(
             database.name,
             otherTableModel.table,
