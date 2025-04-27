@@ -101,7 +101,7 @@ object Examples {
         // Filter by department ID and name pattern using operator overloading (==, &&)
         val query = database
             .from(Employees)
-            .where { Employees.departmentId eq 1 and (Employees.name like "%vince%") }
+            .where { (Employees.departmentId eq 1) and (Employees.name like "%vince%") }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -174,7 +174,7 @@ object Examples {
             .select(Employees.departmentId)
             .extend { avg(Employees.salary).aliased("avg_salary") }
             .groupBy(Employees.departmentId)
-            .having { avg(Employees.salary) > 1000.0 }
+            .having { avg(Employees.salary) gt 1000.0 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)

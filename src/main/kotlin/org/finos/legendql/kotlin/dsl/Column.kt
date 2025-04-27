@@ -164,22 +164,32 @@ infix fun <T> Column<T>.eq(value: T): BinaryExpression {
         else -> throw IllegalArgumentException("Unsupported type: ${value?.javaClass}")
     }
     
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(valueExpr),
         EqualsBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
  * Equals operator for comparing two columns
  */
 infix fun <T> Column<T>.eq(other: Column<T>): BinaryExpression {
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(other.asExpression()),
         EqualsBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
@@ -189,15 +199,21 @@ infix fun <T : Comparable<T>> Column<T>.lt(value: T): BinaryExpression {
     val valueExpr = when (value) {
         is Int -> LiteralExpression(IntegerLiteral(value))
         is String -> LiteralExpression(StringLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
         is Column<*> -> value.asExpression()
         else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
     }
     
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(valueExpr),
         LessThanBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
@@ -212,11 +228,16 @@ infix fun <T : Comparable<T>> Column<T>.gt(value: T): BinaryExpression {
         else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
     }
     
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(valueExpr),
         GreaterThanBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
@@ -345,55 +366,80 @@ fun <T : Comparable<T>> captureGreaterThanOrEqual(left: Column<T>, right: T): Bi
  * Like operator for string pattern matching
  */
 infix fun Column<String>.like(pattern: String): BinaryExpression {
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(LiteralExpression(StringLiteral(pattern))),
         LikeBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
  * Logical AND operator
  */
 infix fun BinaryExpression.and(expr: BinaryExpression): BinaryExpression {
-    return BinaryExpression(
+    val result = BinaryExpression(
         OperandExpression(this),
         OperandExpression(expr),
         AndBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(result)
+    
+    return result
 }
 
 /**
  * Logical OR operator
  */
 infix fun BinaryExpression.or(expr: BinaryExpression): BinaryExpression {
-    return BinaryExpression(
+    val result = BinaryExpression(
         OperandExpression(this),
         OperandExpression(expr),
         OrBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(result)
+    
+    return result
 }
 
 /**
  * Check if value is null
  */
 fun Column<*>.isNull(): BinaryExpression {
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(NullExpression()),
         IsNullBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**
  * Check if value is not null
  */
 fun Column<*>.isNotNull(): BinaryExpression {
-    return BinaryExpression(
+    val expr = BinaryExpression(
         OperandExpression(this.asExpression()),
         OperandExpression(NullExpression()),
         IsNotNullBinaryOperator()
     )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    return expr
 }
 
 /**

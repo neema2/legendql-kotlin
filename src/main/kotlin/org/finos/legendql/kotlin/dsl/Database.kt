@@ -101,19 +101,21 @@ class QueryBuilder<E>(
     /**
      * Filter rows using a condition
      */
-    fun where(condition: () -> BinaryExpression): QueryBuilder<E> {
+    fun where(condition: () -> Any): QueryBuilder<E> {
         // Clear any previous context
         OperatorContext.clearContext()
         
-        // Try to get the expression from the condition lambda
-        val expr = try {
+        // Execute the condition to trigger operator overloading
+        try {
             condition()
         } catch (e: UnsupportedOperationException) {
-            // If an exception was thrown, check if we have a captured expression
-            OperatorContext.getLastExpression() ?: throw RuntimeException(
-                "Failed to capture expression in where clause. Make sure you're using the DSL correctly.", e
-            )
+            // Ignore exceptions, we're just trying to trigger operator overloading
         }
+        
+        // Get the expression from the context
+        val expr = OperatorContext.getLastExpression() ?: throw RuntimeException(
+            "Failed to capture expression in where clause. Make sure you're using the DSL correctly."
+        )
         
         query.filter(expr)
         return this
@@ -200,7 +202,7 @@ class QueryBuilder<E>(
      */
     fun <T> innerJoin(
         otherTable: Table<T>, 
-        on: () -> BinaryExpression
+        on: () -> Any
     ): JoinQueryBuilder<E, T> {
         val otherTableModel = org.finos.legendql.kotlin.model.Table(
             otherTable.tableName, 
@@ -210,15 +212,17 @@ class QueryBuilder<E>(
         // Clear any previous context
         OperatorContext.clearContext()
         
-        // Try to get the expression from the on lambda
-        val expr = try {
+        // Execute the condition to trigger operator overloading
+        try {
             on()
         } catch (e: UnsupportedOperationException) {
-            // If an exception was thrown, check if we have a captured expression
-            OperatorContext.getLastExpression() ?: throw RuntimeException(
-                "Failed to capture expression in join condition. Make sure you're using the DSL correctly.", e
-            )
+            // Ignore exceptions, we're just trying to trigger operator overloading
         }
+        
+        // Get the expression from the context
+        val expr = OperatorContext.getLastExpression() ?: throw RuntimeException(
+            "Failed to capture expression in join condition. Make sure you're using the DSL correctly."
+        )
         
         query.join(
             database.name,
@@ -235,7 +239,7 @@ class QueryBuilder<E>(
      */
     fun <T> leftJoin(
         otherTable: Table<T>, 
-        on: () -> BinaryExpression
+        on: () -> Any
     ): JoinQueryBuilder<E, T> {
         val otherTableModel = org.finos.legendql.kotlin.model.Table(
             otherTable.tableName, 
@@ -245,15 +249,17 @@ class QueryBuilder<E>(
         // Clear any previous context
         OperatorContext.clearContext()
         
-        // Try to get the expression from the on lambda
-        val expr = try {
+        // Execute the condition to trigger operator overloading
+        try {
             on()
         } catch (e: UnsupportedOperationException) {
-            // If an exception was thrown, check if we have a captured expression
-            OperatorContext.getLastExpression() ?: throw RuntimeException(
-                "Failed to capture expression in join condition. Make sure you're using the DSL correctly.", e
-            )
+            // Ignore exceptions, we're just trying to trigger operator overloading
         }
+        
+        // Get the expression from the context
+        val expr = OperatorContext.getLastExpression() ?: throw RuntimeException(
+            "Failed to capture expression in join condition. Make sure you're using the DSL correctly."
+        )
         
         query.join(
             database.name,
