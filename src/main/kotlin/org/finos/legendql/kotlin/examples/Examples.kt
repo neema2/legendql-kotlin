@@ -1,73 +1,80 @@
 package org.finos.legendql.kotlin.examples
 
 import org.finos.legendql.kotlin.model.*
-import org.finos.legendql.kotlin.dsl.LegendQL
+import org.finos.legendql.kotlin.dsl.*
 import org.finos.legendql.kotlin.dialect.purerelation.NonExecutablePureRuntime
 import kotlin.reflect.KClass
+
+/**
+ * Define tables using KTORM-like syntax
+ */
+object Departments : Table<Nothing>("departments", "company") {
+    val id = int("id").primaryKey()
+    val name = varchar("name")
+    val location = varchar("location")
+}
+
+/**
+ * Define employee table with reference to departments
+ */
+object Employees : Table<Nothing>("employees", "company") {
+    val id = int("id").primaryKey()
+    val name = varchar("name")
+    val age = int("age")
+    val salary = double("salary")
+    val departmentId = int("department_id").references(Departments)
+}
 
 /**
  * Examples of using the LegendQL Kotlin DSL
  */
 object Examples {
     /**
-     * Create employee and department tables
+     * Connect to the database
      */
-    private fun createTables(): Pair<LegendQL, LegendQL> {
-        // Employee table
-        val employeeColumns = mapOf(
-            "id" to Int::class,
-            "name" to String::class,
-            "age" to Int::class,
-            "salary" to Double::class,
-            "department_id" to Int::class
+    private fun createDatabase(): Database {
+        return Database.connect(
+            url = "jdbc:mysql://localhost:3306/legendql", 
+            user = "root", 
+            password = "password",
+            name = "company"
         )
-        
-        // Department table
-        val departmentColumns = mapOf(
-            "id" to Int::class,
-            "name" to String::class,
-            "location" to String::class
-        )
-        
-        val employees = LegendQL.table("company", "employees", employeeColumns)
-        val departments = LegendQL.table("company", "departments", departmentColumns)
-        
-        return Pair(employees, departments)
     }
     
     /**
      * Example of a simple select query
      */
     fun simpleSelect() {
-        val (employees, _) = createTables()
+        val database = createDatabase()
         
-        // Select all columns
-        val query1 = employees.select { table ->
-            listOf(table["id"], table["name"], table["age"])
-        }
+        // Select specific columns
+        val query = database
+            .from(Employees)
+            .select(Employees.id, Employees.name, Employees.age)
         
         val runtime = NonExecutablePureRuntime()
-        val result = query1.bind(runtime)
+        val result = query.bind(runtime)
         
         println("Simple Select Query:")
         println(result.executableToString())
         println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.id]}: ${row[Employees.name]} (${row[Employees.age]})")
+        }
     }
     
     /**
      * Example of filtering data
      */
     fun filtering() {
-        val (employees, _) = createTables()
+        val database = createDatabase()
         
-        // Filter by age and salary
-        val query = employees.filter { table ->
-            BinaryExpression(
-                OperandExpression(table["age"]),
-                OperandExpression(LiteralExpression(IntegerLiteral(30))),
-                GreaterThanBinaryOperator()
-            )
-        }
+        // Filter by age
+        val query = database
+            .from(Employees)
+            .where { Employees.age gt 30 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -75,27 +82,52 @@ object Examples {
         println("Filter Query:")
         println(result.executableToString())
         println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]} (${row[Employees.age]})")
+        }
+    }
+    
+    /**
+     * Example of complex filtering with multiple conditions
+     */
+    fun complexFiltering() {
+        val database = createDatabase()
+        
+        // Filter by department ID and name pattern
+        val query = database
+            .from(Employees)
+            .where { (Employees.departmentId eq 1) and (Employees.name like "%vince%") }
+        
+        val runtime = NonExecutablePureRuntime()
+        val result = query.bind(runtime)
+        
+        println("Complex Filter Query:")
+        println(result.executableToString())
+        println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]} (Dept: ${row[Employees.departmentId]})")
+        }
     }
     
     /**
      * Example of extending with computed columns
      */
     fun extending() {
-        val (employees, _) = createTables()
+        val database = createDatabase()
         
         // Extend with computed columns
-        val query = employees.extend { table ->
-            listOf(
-                ComputedColumnAliasExpression(
-                    "bonus",
-                    BinaryExpression(
-                        OperandExpression(table["salary"]),
-                        OperandExpression(LiteralExpression(IntegerLiteral(1000))),
-                        AddBinaryOperator()
-                    )
+        val query = database
+            .from(Employees)
+            .select(Employees.name, Employees.salary)
+            .extend(
+                listOf(
+                    (Employees.salary.asExpression() + LiteralExpression(IntegerLiteral(1000))).aliased("bonus")
                 )
             )
-        }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -106,46 +138,41 @@ object Examples {
     }
     
     /**
-     * Example of renaming columns
+     * Example of ordering data
      */
-    fun renaming() {
-        val (employees, _) = createTables()
+    fun ordering() {
+        val database = createDatabase()
         
-        // Rename columns
-        val query = employees.rename { table ->
-            listOf(
-                ColumnAliasExpression("employee_id", table["id"]),
-                ColumnAliasExpression("employee_name", table["name"])
-            )
-        }
+        // Order by salary descending and name ascending
+        val query = database
+            .from(Employees)
+            .orderBy(Employees.salary.desc(), Employees.name.asc())
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
         
-        println("Rename Query:")
+        println("Order By Query:")
         println(result.executableToString())
         println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]}: ${row[Employees.salary]}")
+        }
     }
     
     /**
      * Example of grouping data
      */
     fun grouping() {
-        val (employees, _) = createTables()
+        val database = createDatabase()
         
-        // Group by department_id and calculate average salary
-        val query = employees.groupBy { table ->
-            GroupByExpression(
-                listOf(
-                    table["department_id"],
-                    FunctionExpression(
-                        AverageFunction(),
-                        listOf(table["salary"])
-                    )
-                ),
-                listOf(table["department_id"])
-            )
-        }
+        // Group by department and calculate average salary
+        val query = database
+            .from(Employees)
+            .select(Employees.departmentId, avg(Employees.salary).aliased("avg_salary"))
+            .groupBy(Employees.departmentId)
+            .having { avg(Employees.salary) gt 1000.0 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -156,47 +183,16 @@ object Examples {
     }
     
     /**
-     * Example of ordering data
-     */
-    fun ordering() {
-        val (employees, _) = createTables()
-        
-        // Order by salary descending and name ascending
-        val query = employees.orderBy { table ->
-            listOf(
-                OrderByExpression(DescendingOrderType(), table["salary"]),
-                OrderByExpression(AscendingOrderType(), table["name"])
-            )
-        }
-        
-        val runtime = NonExecutablePureRuntime()
-        val result = query.bind(runtime)
-        
-        println("Order By Query:")
-        println(result.executableToString())
-        println()
-    }
-    
-    /**
      * Example of joining tables
      */
     fun joining() {
-        val (employees, departments) = createTables()
+        val database = createDatabase()
         
         // Join employees and departments
-        val query = employees.join(departments) { emp, dept ->
-            Pair(
-                BinaryExpression(
-                    OperandExpression(emp["department_id"]),
-                    OperandExpression(dept["id"]),
-                    EqualsBinaryOperator()
-                ),
-                listOf(
-                    emp["name"],
-                    dept["name"]
-                )
-            )
-        }
+        val query = database
+            .from(Employees)
+            .innerJoin(Departments) { Employees.departmentId eq Departments.id }
+            .select(Employees.name, Departments.name)
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -210,10 +206,12 @@ object Examples {
      * Example of limiting and offsetting data
      */
     fun limitingAndOffsetting() {
-        val (employees, _) = createTables()
+        val database = createDatabase()
         
         // Limit to 10 rows and skip first 5
-        val query = employees.limit(10).offset(5)
+        val query = database
+            .from(Employees)
+            .limit(5, 10) // offset 5, limit 10
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -221,43 +219,30 @@ object Examples {
         println("Limit and Offset Query:")
         println(result.executableToString())
         println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]}")
+        }
     }
     
     /**
      * Example of complex query with multiple operations
      */
     fun complexQuery() {
-        val (employees, departments) = createTables()
+        val database = createDatabase()
         
         // Complex query with multiple operations
-        val query = employees
-            .select { table -> 
-                listOf(table["name"], table["salary"]) 
-            }
-            .filter { table ->
-                BinaryExpression(
-                    OperandExpression(table["age"]),
-                    OperandExpression(LiteralExpression(IntegerLiteral(30))),
-                    GreaterThanBinaryOperator()
-                )
-            }
-            .extend { table ->
+        val query = database
+            .from(Employees)
+            .select(Employees.name, Employees.salary)
+            .where { Employees.age gt 30 }
+            .extend(
                 listOf(
-                    ComputedColumnAliasExpression(
-                        "bonus",
-                        BinaryExpression(
-                            OperandExpression(table["salary"]),
-                            OperandExpression(LiteralExpression(IntegerLiteral(1000))),
-                            AddBinaryOperator()
-                        )
-                    )
+                    (Employees.salary.asExpression() + LiteralExpression(IntegerLiteral(1000))).aliased("bonus")
                 )
-            }
-            .orderBy { table ->
-                listOf(
-                    OrderByExpression(DescendingOrderType(), table["salary"])
-                )
-            }
+            )
+            .orderBy(Employees.salary.desc())
             .limit(10)
         
         val runtime = NonExecutablePureRuntime()
@@ -273,14 +258,20 @@ object Examples {
      */
     @JvmStatic
     fun main(args: Array<String>) {
+        println("Running LegendQL Kotlin Examples with KTORM-like syntax")
+        println("======================================================")
+        println()
+        
         simpleSelect()
         filtering()
+        complexFiltering()
         extending()
-        renaming()
-        grouping()
         ordering()
+        grouping()
         joining()
         limitingAndOffsetting()
         complexQuery()
+        
+        println("All examples completed successfully")
     }
 }

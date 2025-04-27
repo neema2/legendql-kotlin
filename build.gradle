@@ -33,5 +33,5 @@ compileTestKotlin {
 }
 
 application {
-    mainClassName = 'org.finos.legendql.kotlin.MainKt'
+    mainClass.set('org.finos.legendql.kotlin.MainKt')
 }
