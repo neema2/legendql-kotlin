@@ -80,9 +80,9 @@ fun BinaryExpression.aliased(alias: String): ComputedColumnAliasExpression {
 }
 
 /**
- * Logical AND operator (&&) - Kotlin operator overloading
+ * Logical AND operator
  */
-operator fun BinaryExpression.times(expr: BinaryExpression): BinaryExpression {
+infix fun BinaryExpression.and(expr: BinaryExpression): BinaryExpression {
     return BinaryExpression(
         OperandExpression(this),
         OperandExpression(expr),
@@ -91,9 +91,9 @@ operator fun BinaryExpression.times(expr: BinaryExpression): BinaryExpression {
 }
 
 /**
- * Logical OR operator (||) - Kotlin operator overloading
+ * Logical OR operator
  */
-operator fun BinaryExpression.plus(expr: BinaryExpression): BinaryExpression {
+infix fun BinaryExpression.or(expr: BinaryExpression): BinaryExpression {
     return BinaryExpression(
         OperandExpression(this),
         OperandExpression(expr),
@@ -112,21 +112,4 @@ infix fun FunctionExpression.gt(value: Double): BinaryExpression {
         OperandExpression(LiteralExpression(DoubleLiteral(value))),
         GreaterThanBinaryOperator()
     )
-}
-
-/**
- * Greater than operator (>) for function expressions - Kotlin operator overloading
- */
-operator fun FunctionExpression.compareTo(value: Double): Int {
-    val expr = BinaryExpression(
-        OperandExpression(this),
-        OperandExpression(LiteralExpression(DoubleLiteral(value))),
-        GreaterThanBinaryOperator()
-    )
-    
-    // Store the expression in the context
-    OperatorContext.setLastExpression(expr)
-    
-    // Return 0 to satisfy the compiler, but this value is never actually used
-    return 0
 }

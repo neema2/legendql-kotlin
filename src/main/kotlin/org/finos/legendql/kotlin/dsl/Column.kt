@@ -85,71 +85,7 @@ enum class ComparisonType {
     GREATER_THAN_EQUALS
 }
 
-/**
- * Equals operator (==)
- * This implements the Kotlin operator overloading for equality
- */
-fun <T> Column<T>.equals(other: Any?): Boolean {
-    // Create the binary expression directly
-    val valueExpr = when (other) {
-        is Int -> LiteralExpression(IntegerLiteral(other))
-        is String -> LiteralExpression(StringLiteral(other))
-        is Boolean -> LiteralExpression(BooleanLiteral(other))
-        is Column<*> -> other.asExpression()
-        null -> NullExpression()
-        else -> throw IllegalArgumentException("Unsupported type: ${other?.javaClass}")
-    }
-    
-    val expr = BinaryExpression(
-        OperandExpression(this.asExpression()),
-        OperandExpression(valueExpr),
-        EqualsBinaryOperator()
-    )
-    
-    // Store the expression in the context
-    OperatorContext.setLastExpression(expr)
-    
-    // Return false to satisfy the compiler, but this value is never actually used
-    return false
-}
-
-/**
- * Comparison operator for <, >, <=, >= 
- * This implements the Kotlin operator overloading for comparisons
- */
-operator fun <T : Comparable<T>> Column<T>.compareTo(other: T): Int {
-    // Determine which comparison operator is being used based on the calling context
-    val comparisonType = OperatorContext.getLastComparisonType()
-    
-    // Create the binary expression
-    val valueExpr = when (other) {
-        is Int -> LiteralExpression(IntegerLiteral(other))
-        is String -> LiteralExpression(StringLiteral(other))
-        is Double -> LiteralExpression(DoubleLiteral(other))
-        is Column<*> -> other.asExpression()
-        else -> throw IllegalArgumentException("Unsupported type: ${other.javaClass}")
-    }
-    
-    val operator = when (comparisonType) {
-        ComparisonType.LESS_THAN -> LessThanBinaryOperator()
-        ComparisonType.GREATER_THAN -> GreaterThanBinaryOperator()
-        ComparisonType.LESS_THAN_EQUALS -> LessThanEqualsBinaryOperator()
-        ComparisonType.GREATER_THAN_EQUALS -> GreaterThanEqualsBinaryOperator()
-        else -> throw IllegalStateException("Invalid comparison type: $comparisonType")
-    }
-    
-    val expr = BinaryExpression(
-        OperandExpression(this.asExpression()),
-        OperandExpression(valueExpr),
-        operator
-    )
-    
-    // Store the expression in the context
-    OperatorContext.setLastExpression(expr)
-    
-    // Return 0 to satisfy the compiler, but this value is never actually used
-    return 0
-}
+// Operator overloading removed - using infix functions instead
 
 /**
  * Legacy equals operator (eq) - kept for backward compatibility
@@ -352,27 +288,7 @@ infix fun Column<String>.like(pattern: String): BinaryExpression {
     )
 }
 
-/**
- * Logical AND operator
- */
-infix fun BinaryExpression.and(expr: BinaryExpression): BinaryExpression {
-    return BinaryExpression(
-        OperandExpression(this),
-        OperandExpression(expr),
-        AndBinaryOperator()
-    )
-}
-
-/**
- * Logical OR operator
- */
-infix fun BinaryExpression.or(expr: BinaryExpression): BinaryExpression {
-    return BinaryExpression(
-        OperandExpression(this),
-        OperandExpression(expr),
-        OrBinaryOperator()
-    )
-}
+// Logical operators moved to Extensions.kt
 
 /**
  * Check if value is null
