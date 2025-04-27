@@ -72,7 +72,7 @@ class KtormStyleDslTest {
         val query = database
             .from(Employees)
             .select(Employees.departmentId)
-            .extend(listOf(avg(Employees.salary).aliased("avg_salary")))
+            .extend { avg(Employees.salary).aliased("avg_salary") }
             .groupBy(Employees.departmentId)
             
         val runtime = NonExecutablePureRuntime()
