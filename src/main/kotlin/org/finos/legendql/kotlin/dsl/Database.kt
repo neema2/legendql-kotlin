@@ -62,6 +62,40 @@ class QueryBuilder<E>(
         return this
     }
     
+    /**
+     * Extend with computed columns using a lambda
+     * This method handles both single expressions and lists of expressions
+     */
+    fun extend(condition: () -> Any): QueryBuilder<E> {
+        // Clear any previous context
+        OperatorContext.clearContext()
+        
+        // Try to get the expression from the condition lambda
+        val result = try {
+            condition()
+        } catch (e: UnsupportedOperationException) {
+            // If an exception was thrown, check if we have a captured expression
+            throw RuntimeException(
+                "Failed to capture expression in extend clause. Make sure you're using the DSL correctly.", e
+            )
+        }
+        
+        // Handle different return types
+        when (result) {
+            is ComputedColumnAliasExpression -> query.extend(listOf(result))
+            is List<*> -> {
+                val expressions = result.filterIsInstance<ComputedColumnAliasExpression>()
+                if (expressions.size != result.size) {
+                    throw RuntimeException("All items in the list must be ComputedColumnAliasExpression")
+                }
+                query.extend(expressions)
+            }
+            else -> throw RuntimeException("Extend lambda must return either a ComputedColumnAliasExpression or a List<ComputedColumnAliasExpression>")
+        }
+        
+        return this
+    }
+    
     // Having method is already defined in the class
     
     /**
@@ -105,19 +139,21 @@ class QueryBuilder<E>(
     /**
      * Add a having clause to a group by
      */
-    fun having(condition: () -> BinaryExpression): QueryBuilder<E> {
+    fun having(condition: () -> Any): QueryBuilder<E> {
         // Clear any previous context
         OperatorContext.clearContext()
         
-        // Try to get the expression from the condition lambda
-        val expr = try {
+        // Execute the condition to trigger operator overloading
+        try {
             condition()
         } catch (e: UnsupportedOperationException) {
-            // If an exception was thrown, check if we have a captured expression
-            OperatorContext.getLastExpression() ?: throw RuntimeException(
-                "Failed to capture expression in having clause. Make sure you're using the DSL correctly.", e
-            )
+            // Ignore exceptions, we're just trying to trigger operator overloading
         }
+        
+        // Get the expression from the context
+        val expr = OperatorContext.getLastExpression() ?: throw RuntimeException(
+            "Failed to capture expression in having clause. Make sure you're using the DSL correctly."
+        )
         
         // Find the last GroupByClause and update its having expression
         val lastGroupByClause = query.clauses.lastOrNull { it is GroupByClause } as? GroupByClause

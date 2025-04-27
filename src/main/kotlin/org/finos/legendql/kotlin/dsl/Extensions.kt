@@ -113,3 +113,20 @@ infix fun FunctionExpression.gt(value: Double): BinaryExpression {
         GreaterThanBinaryOperator()
     )
 }
+
+/**
+ * Greater than operator (>) for function expressions - Kotlin operator overloading
+ */
+operator fun FunctionExpression.compareTo(value: Double): Int {
+    val expr = BinaryExpression(
+        OperandExpression(this),
+        OperandExpression(LiteralExpression(DoubleLiteral(value))),
+        GreaterThanBinaryOperator()
+    )
+    
+    // Store the expression in the context
+    OperatorContext.setLastExpression(expr)
+    
+    // Return 0 to satisfy the compiler, but this value is never actually used
+    return 0
+}

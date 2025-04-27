@@ -126,11 +126,9 @@ object Examples {
         val query = database
             .from(Employees)
             .select(Employees.name, Employees.salary)
-            .extend(
-                listOf(
-                    (Employees.salary + 1000).aliased("bonus")
-                )
-            )
+            .extend { 
+                (Employees.salary + 1000).aliased("bonus")
+            }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -174,9 +172,9 @@ object Examples {
         val query = database
             .from(Employees)
             .select(Employees.departmentId)
-            .extend(listOf(Employees.salary.avg().aliased("avg_salary")))
+            .extend { avg(Employees.salary).aliased("avg_salary") }
             .groupBy(Employees.departmentId)
-            .having { FunctionExpression(AverageFunction(), listOf(Employees.salary.asExpression())) gt 1000.0 }
+            .having { avg(Employees.salary) > 1000.0 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -241,11 +239,9 @@ object Examples {
             .from(Employees)
             .select(Employees.name, Employees.salary)
             .where { Employees.age gt 30 }
-            .extend(
-                listOf(
-                    (Employees.salary + 1000).aliased("bonus")
-                )
-            )
+            .extend { 
+                (Employees.salary + 1000).aliased("bonus")
+            }
             .orderBy(Employees.salary.desc())
             .limit(10)
         
@@ -270,14 +266,14 @@ object Examples {
                 Employees.name,
                 Employees.salary
             )
-            .extend(
+            .extend { 
                 listOf(
                     (Employees.salary + 1000).aliased("salary_plus"),
                     (Employees.salary - 500).aliased("salary_minus"),
                     (Employees.salary * 2).aliased("salary_times"),
                     (Employees.salary / 2).aliased("salary_divided")
                 )
-            )
+            }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -287,7 +283,7 @@ object Examples {
         println()
         
         // In a real implementation, this would print actual data
-        query.forEach { row ->
+        query.forEach { row: Row ->
             println("${row[Employees.name]}: ${row[Employees.salary]}")
             println("  + 1000 = ${row.get<Double>("salary_plus")}")
             println("  - 500 = ${row.get<Double>("salary_minus")}")
