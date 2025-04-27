@@ -71,10 +71,10 @@ object Examples {
     fun filtering() {
         val database = createDatabase()
         
-        // Filter by age
+        // Filter by age using operator overloading (>)
         val query = database
             .from(Employees)
-            .where { Employees.age gt 30 }
+            .where { Employees.age > 30 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -95,10 +95,10 @@ object Examples {
     fun complexFiltering() {
         val database = createDatabase()
         
-        // Filter by department ID and name pattern
+        // Filter by department ID and name pattern using operator overloading (==, &&)
         val query = database
             .from(Employees)
-            .where { (Employees.departmentId eq 1) and (Employees.name like "%vince%") }
+            .where { (Employees.departmentId == 1) && (Employees.name like "%vince%") }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -172,7 +172,7 @@ object Examples {
             .from(Employees)
             .select(Employees.departmentId, avg(Employees.salary).aliased("avg_salary"))
             .groupBy(Employees.departmentId)
-            .having { avg(Employees.salary) gt 1000.0 }
+            .having { avg(Employees.salary) > 1000.0 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -191,7 +191,7 @@ object Examples {
         // Join employees and departments
         val query = database
             .from(Employees)
-            .innerJoin(Departments) { Employees.departmentId eq Departments.id }
+            .innerJoin(Departments) { Employees.departmentId == Departments.id }
             .select(Employees.name, Departments.name)
         
         val runtime = NonExecutablePureRuntime()
@@ -236,7 +236,7 @@ object Examples {
         val query = database
             .from(Employees)
             .select(Employees.name, Employees.salary)
-            .where { Employees.age gt 30 }
+            .where { Employees.age > 30 }
             .extend(
                 listOf(
                     (Employees.salary + 1000).aliased("bonus")
@@ -289,6 +289,35 @@ object Examples {
     }
     
     /**
+     * Example of comparison operators with Kotlin operator overloading
+     */
+    fun comparisonOperators() {
+        val database = createDatabase()
+        
+        // Query using comparison operators with Kotlin operator overloading
+        val query = database
+            .from(Employees)
+            .where { 
+                (Employees.salary > 1000.0) && 
+                (Employees.age < 50) && 
+                (Employees.name == "John") || 
+                (Employees.departmentId == 1)
+            }
+        
+        val runtime = NonExecutablePureRuntime()
+        val result = query.bind(runtime)
+        
+        println("Comparison Operators Query:")
+        println(result.executableToString())
+        println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]}: ${row[Employees.salary]}")
+        }
+    }
+    
+    /**
      * Run all examples
      */
     @JvmStatic
@@ -307,6 +336,7 @@ object Examples {
         limitingAndOffsetting()
         complexQuery()
         arithmeticOperators()
+        comparisonOperators()
         
         println("All examples completed successfully")
     }

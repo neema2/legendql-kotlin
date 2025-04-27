@@ -71,3 +71,25 @@ fun FunctionExpression.aliased(alias: String): ComputedColumnAliasExpression {
 fun BinaryExpression.aliased(alias: String): ComputedColumnAliasExpression {
     return ComputedColumnAliasExpression(alias, this)
 }
+
+/**
+ * Logical AND operator (&&) - Kotlin operator overloading
+ */
+operator fun BinaryExpression.times(expr: BinaryExpression): BinaryExpression {
+    return BinaryExpression(
+        OperandExpression(this),
+        OperandExpression(expr),
+        AndBinaryOperator()
+    )
+}
+
+/**
+ * Logical OR operator (||) - Kotlin operator overloading
+ */
+operator fun BinaryExpression.plus(expr: BinaryExpression): BinaryExpression {
+    return BinaryExpression(
+        OperandExpression(this),
+        OperandExpression(expr),
+        OrBinaryOperator()
+    )
+}
