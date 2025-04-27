@@ -206,6 +206,7 @@ infix fun <T : Comparable<T>> Column<T>.lt(value: T): BinaryExpression {
 infix fun <T : Comparable<T>> Column<T>.gt(value: T): BinaryExpression {
     val valueExpr = when (value) {
         is Int -> LiteralExpression(IntegerLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
         is String -> LiteralExpression(StringLiteral(value))
         is Column<*> -> value.asExpression()
         else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
