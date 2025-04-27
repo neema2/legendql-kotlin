@@ -119,13 +119,13 @@ object Examples {
     fun extending() {
         val database = createDatabase()
         
-        // Extend with computed columns
+        // Extend with computed columns using KTORM-style operators
         val query = database
             .from(Employees)
             .select(Employees.name, Employees.salary)
             .extend(
                 listOf(
-                    (Employees.salary.asExpression() + LiteralExpression(IntegerLiteral(1000))).aliased("bonus")
+                    (Employees.salary + 1000).aliased("bonus")
                 )
             )
         
@@ -239,7 +239,7 @@ object Examples {
             .where { Employees.age gt 30 }
             .extend(
                 listOf(
-                    (Employees.salary.asExpression() + LiteralExpression(IntegerLiteral(1000))).aliased("bonus")
+                    (Employees.salary + 1000).aliased("bonus")
                 )
             )
             .orderBy(Employees.salary.desc())
@@ -251,6 +251,41 @@ object Examples {
         println("Complex Query:")
         println(result.executableToString())
         println()
+    }
+    
+    /**
+     * Example of arithmetic operators in KTORM-style syntax
+     */
+    fun arithmeticOperators() {
+        val database = createDatabase()
+        
+        // Query using arithmetic operators
+        val query = database
+            .from(Employees)
+            .select(
+                Employees.name,
+                Employees.salary,
+                (Employees.salary + 1000).aliased("salary_plus"),
+                (Employees.salary - 500).aliased("salary_minus"),
+                (Employees.salary * 2).aliased("salary_times"),
+                (Employees.salary / 2).aliased("salary_divided")
+            )
+        
+        val runtime = NonExecutablePureRuntime()
+        val result = query.bind(runtime)
+        
+        println("Arithmetic Operators Query:")
+        println(result.executableToString())
+        println()
+        
+        // In a real implementation, this would print actual data
+        query.forEach { row ->
+            println("${row[Employees.name]}: ${row[Employees.salary]}")
+            println("  + 1000 = ${row["salary_plus"]}")
+            println("  - 500 = ${row["salary_minus"]}")
+            println("  * 2 = ${row["salary_times"]}")
+            println("  / 2 = ${row["salary_divided"]}")
+        }
     }
     
     /**
@@ -271,6 +306,7 @@ object Examples {
         joining()
         limitingAndOffsetting()
         complexQuery()
+        arithmeticOperators()
         
         println("All examples completed successfully")
     }
