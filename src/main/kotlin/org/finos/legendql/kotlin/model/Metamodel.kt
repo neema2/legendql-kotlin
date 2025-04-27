@@ -263,6 +263,38 @@ class BitwiseOrBinaryOperator : BinaryOperator {
 }
 
 /**
+ * LIKE binary operator implementation
+ */
+class LikeBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitLikeBinaryOperator(this, parameter)
+}
+
+/**
+ * IS NULL binary operator implementation
+ */
+class IsNullBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitIsNullBinaryOperator(this, parameter)
+}
+
+/**
+ * IS NOT NULL binary operator implementation
+ */
+class IsNotNullBinaryOperator : BinaryOperator {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitIsNotNullBinaryOperator(this, parameter)
+}
+
+/**
+ * Null expression implementation
+ */
+class NullExpression : Expression {
+    override fun <P, R> visit(visitor: ExecutionVisitor<P, R>, parameter: P): R = 
+        visitor.visitNullExpression(this, parameter)
+}
+
+/**
  * Operand expression implementation
  */
 data class OperandExpression(val expression: Expression) : Expression {
@@ -655,4 +687,8 @@ interface ExecutionVisitor<P, R> {
     fun visitIsNotBinaryOperator(isNotBinaryOperator: IsNotBinaryOperator, parameter: P): R
     fun visitBitwiseAndBinaryOperator(bitwiseAndBinaryOperator: BitwiseAndBinaryOperator, parameter: P): R
     fun visitBitwiseOrBinaryOperator(bitwiseOrBinaryOperator: BitwiseOrBinaryOperator, parameter: P): R
+    fun visitLikeBinaryOperator(likeBinaryOperator: LikeBinaryOperator, parameter: P): R
+    fun visitIsNullBinaryOperator(isNullBinaryOperator: IsNullBinaryOperator, parameter: P): R
+    fun visitIsNotNullBinaryOperator(isNotNullBinaryOperator: IsNotNullBinaryOperator, parameter: P): R
+    fun visitNullExpression(nullExpression: NullExpression, parameter: P): R
 }

@@ -371,4 +371,20 @@ class PureRelationExpressionVisitor : ExecutionVisitor<Unit, String> {
     override fun visitBitwiseOrBinaryOperator(bitwiseOrBinaryOperator: BitwiseOrBinaryOperator, parameter: Unit): String {
         return "|"
     }
+    
+    override fun visitLikeBinaryOperator(likeBinaryOperator: LikeBinaryOperator, parameter: Unit): String {
+        return "like"
+    }
+    
+    override fun visitIsNullBinaryOperator(isNullBinaryOperator: IsNullBinaryOperator, parameter: Unit): String {
+        return "is null"
+    }
+    
+    override fun visitIsNotNullBinaryOperator(isNotNullBinaryOperator: IsNotNullBinaryOperator, parameter: Unit): String {
+        return "is not null"
+    }
+    
+    override fun visitNullExpression(nullExpression: NullExpression, parameter: Unit): String {
+        return "null"
+    }
 }
