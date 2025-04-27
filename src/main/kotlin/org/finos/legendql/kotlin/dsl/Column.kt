@@ -145,3 +145,75 @@ fun Column<*>.isNotNull(): BinaryExpression {
         IsNotNullBinaryOperator()
     )
 }
+
+/**
+ * Addition operator
+ */
+operator fun <T : Number> Column<T>.plus(value: Number): BinaryExpression {
+    val valueExpr = when (value) {
+        is Int -> LiteralExpression(IntegerLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
+        is Long -> LiteralExpression(LongLiteral(value))
+        else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
+    }
+    
+    return BinaryExpression(
+        OperandExpression(this.asExpression()),
+        OperandExpression(valueExpr),
+        AdditionBinaryOperator()
+    )
+}
+
+/**
+ * Subtraction operator
+ */
+operator fun <T : Number> Column<T>.minus(value: Number): BinaryExpression {
+    val valueExpr = when (value) {
+        is Int -> LiteralExpression(IntegerLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
+        is Long -> LiteralExpression(LongLiteral(value))
+        else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
+    }
+    
+    return BinaryExpression(
+        OperandExpression(this.asExpression()),
+        OperandExpression(valueExpr),
+        SubtractionBinaryOperator()
+    )
+}
+
+/**
+ * Multiplication operator
+ */
+operator fun <T : Number> Column<T>.times(value: Number): BinaryExpression {
+    val valueExpr = when (value) {
+        is Int -> LiteralExpression(IntegerLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
+        is Long -> LiteralExpression(LongLiteral(value))
+        else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
+    }
+    
+    return BinaryExpression(
+        OperandExpression(this.asExpression()),
+        OperandExpression(valueExpr),
+        MultiplicationBinaryOperator()
+    )
+}
+
+/**
+ * Division operator
+ */
+operator fun <T : Number> Column<T>.div(value: Number): BinaryExpression {
+    val valueExpr = when (value) {
+        is Int -> LiteralExpression(IntegerLiteral(value))
+        is Double -> LiteralExpression(DoubleLiteral(value))
+        is Long -> LiteralExpression(LongLiteral(value))
+        else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass}")
+    }
+    
+    return BinaryExpression(
+        OperandExpression(this.asExpression()),
+        OperandExpression(valueExpr),
+        DivisionBinaryOperator()
+    )
+}
