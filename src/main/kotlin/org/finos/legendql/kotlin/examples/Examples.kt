@@ -5,6 +5,9 @@ import org.finos.legendql.kotlin.dsl.*
 import org.finos.legendql.kotlin.dialect.purerelation.NonExecutablePureRuntime
 import kotlin.reflect.KClass
 
+// Import the Table class from the dsl package
+import org.finos.legendql.kotlin.dsl.Table
+
 /**
  * Define tables using KTORM-like syntax
  */
@@ -32,8 +35,8 @@ object Examples {
     /**
      * Connect to the database
      */
-    private fun createDatabase(): Database {
-        return Database.connect(
+    private fun createDatabase(): org.finos.legendql.kotlin.dsl.Database {
+        return org.finos.legendql.kotlin.dsl.Database.connect(
             url = "jdbc:mysql://localhost:3306/legendql", 
             user = "root", 
             password = "password",
@@ -74,7 +77,7 @@ object Examples {
         // Filter by age using operator overloading (>)
         val query = database
             .from(Employees)
-            .where { Employees.age > 30 }
+            .where { Employees.age gt 30 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -98,7 +101,7 @@ object Examples {
         // Filter by department ID and name pattern using operator overloading (==, &&)
         val query = database
             .from(Employees)
-            .where { (Employees.departmentId == 1) && (Employees.name like "%vince%") }
+            .where { Employees.departmentId eq 1 and (Employees.name like "%vince%") }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -109,7 +112,7 @@ object Examples {
         
         // In a real implementation, this would print actual data
         query.forEach { row ->
-            println("${row[Employees.name]} (Dept: ${row[Employees.departmentId]})")
+            println("${row[Employees.name]} (Dept: ${row[Departments.name]})")
         }
     }
     
@@ -170,9 +173,10 @@ object Examples {
         // Group by department and calculate average salary
         val query = database
             .from(Employees)
-            .select(Employees.departmentId, avg(Employees.salary).aliased("avg_salary"))
+            .select(Employees.departmentId)
+            .extend(listOf(Employees.salary.avg().aliased("avg_salary")))
             .groupBy(Employees.departmentId)
-            .having { avg(Employees.salary) > 1000.0 }
+            .having { FunctionExpression(AverageFunction(), listOf(Employees.salary.asExpression())) gt 1000.0 }
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -191,8 +195,8 @@ object Examples {
         // Join employees and departments
         val query = database
             .from(Employees)
-            .innerJoin(Departments) { Employees.departmentId == Departments.id }
-            .select(Employees.name, Departments.name)
+            .innerJoin(Departments) { Employees.departmentId eq Departments.id }
+            .select(Employees.name)
         
         val runtime = NonExecutablePureRuntime()
         val result = query.bind(runtime)
@@ -236,7 +240,7 @@ object Examples {
         val query = database
             .from(Employees)
             .select(Employees.name, Employees.salary)
-            .where { Employees.age > 30 }
+            .where { Employees.age gt 30 }
             .extend(
                 listOf(
                     (Employees.salary + 1000).aliased("bonus")
@@ -264,11 +268,15 @@ object Examples {
             .from(Employees)
             .select(
                 Employees.name,
-                Employees.salary,
-                (Employees.salary + 1000).aliased("salary_plus"),
-                (Employees.salary - 500).aliased("salary_minus"),
-                (Employees.salary * 2).aliased("salary_times"),
-                (Employees.salary / 2).aliased("salary_divided")
+                Employees.salary
+            )
+            .extend(
+                listOf(
+                    (Employees.salary + 1000).aliased("salary_plus"),
+                    (Employees.salary - 500).aliased("salary_minus"),
+                    (Employees.salary * 2).aliased("salary_times"),
+                    (Employees.salary / 2).aliased("salary_divided")
+                )
             )
         
         val runtime = NonExecutablePureRuntime()
@@ -281,10 +289,10 @@ object Examples {
         // In a real implementation, this would print actual data
         query.forEach { row ->
             println("${row[Employees.name]}: ${row[Employees.salary]}")
-            println("  + 1000 = ${row["salary_plus"]}")
-            println("  - 500 = ${row["salary_minus"]}")
-            println("  * 2 = ${row["salary_times"]}")
-            println("  / 2 = ${row["salary_divided"]}")
+            println("  + 1000 = ${row.get<Double>("salary_plus")}")
+            println("  - 500 = ${row.get<Double>("salary_minus")}")
+            println("  * 2 = ${row.get<Double>("salary_times")}")
+            println("  / 2 = ${row.get<Double>("salary_divided")}")
         }
     }
     
@@ -298,10 +306,10 @@ object Examples {
         val query = database
             .from(Employees)
             .where { 
-                (Employees.salary > 1000.0) && 
-                (Employees.age < 50) && 
-                (Employees.name == "John") || 
-                (Employees.departmentId == 1)
+                (Employees.salary gt 1000.0) and 
+                (Employees.age lt 50) and 
+                (Employees.name eq "John") or 
+                (Employees.departmentId eq 1)
             }
         
         val runtime = NonExecutablePureRuntime()

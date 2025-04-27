@@ -24,6 +24,13 @@ fun <T : Number> avg(column: Column<T>): FunctionExpression {
 }
 
 /**
+ * Average function for aggregation with column reference
+ */
+fun avg(columnRef: ColumnReferenceExpression): FunctionExpression {
+    return FunctionExpression(AverageFunction(), listOf(columnRef))
+}
+
+/**
  * Count function for aggregation
  */
 fun <T> count(column: Column<T>): FunctionExpression {
@@ -91,5 +98,18 @@ operator fun BinaryExpression.plus(expr: BinaryExpression): BinaryExpression {
         OperandExpression(this),
         OperandExpression(expr),
         OrBinaryOperator()
+    )
+}
+
+// Removed duplicate infix functions that were already defined in Column.kt
+
+/**
+ * Greater than operator for function expressions
+ */
+infix fun FunctionExpression.gt(value: Double): BinaryExpression {
+    return BinaryExpression(
+        OperandExpression(this),
+        OperandExpression(LiteralExpression(DoubleLiteral(value))),
+        GreaterThanBinaryOperator()
     )
 }

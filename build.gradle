@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
     id 'application'
 }
 
@@ -25,13 +25,25 @@ test {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = '11'
+    kotlinOptions.jvmTarget = '17'
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = '11'
+    kotlinOptions.jvmTarget = '17'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 application {
-    mainClass.set('org.finos.legendql.kotlin.MainKt')
+    mainClassName = 'org.finos.legendql.kotlin.MainKt'
+}
+
+// Add Gradle Wrapper task
+wrapper {
+    gradleVersion = '8.4'
+    distributionType = Wrapper.DistributionType.BIN
 }

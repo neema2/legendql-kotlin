@@ -9,37 +9,37 @@ import kotlin.reflect.KClass
 /**
  * Main DSL interface for LegendQL
  */
-class LegendQL(database: Database, table: Table) {
+class LegendQL(database: org.finos.legendql.kotlin.model.Database, table: org.finos.legendql.kotlin.model.Table) {
     private val query = Query.fromTable(database, table)
 
     companion object {
         /**
          * Create a LegendQL instance from a table
          */
-        fun fromTable(database: Database, table: Table): LegendQL {
+        fun fromTable(database: org.finos.legendql.kotlin.model.Database, table: org.finos.legendql.kotlin.model.Table): LegendQL {
             return LegendQL(database, table)
         }
 
         /**
          * Create a LegendQL instance from a database and table name with columns
          */
-        fun fromDb(database: Database, table: String, columns: Map<String, KClass<*>>): LegendQL {
-            return fromTable(database, Table(table, columns.toMutableMap()))
+        fun fromDb(database: org.finos.legendql.kotlin.model.Database, table: String, columns: Map<String, KClass<*>>): LegendQL {
+            return fromTable(database, org.finos.legendql.kotlin.model.Table(table, columns.toMutableMap()))
         }
 
         /**
          * Create a LegendQL instance from a lakehouse dataset
          */
-        fun fromLh(dataset: Table): LegendQL {
-            return fromTable(Database("lakehouse", listOf(dataset)), dataset)
+        fun fromLh(dataset: org.finos.legendql.kotlin.model.Table): LegendQL {
+            return fromTable(org.finos.legendql.kotlin.model.Database("lakehouse", listOf(dataset)), dataset)
         }
 
         /**
          * Create a table definition
          */
         fun table(databaseName: String, tableName: String, columns: Map<String, KClass<*>>): LegendQL {
-            val table = Table(tableName, columns.toMutableMap())
-            val database = Database(databaseName, listOf(table))
+            val table = org.finos.legendql.kotlin.model.Table(tableName, columns.toMutableMap())
+            val database = org.finos.legendql.kotlin.model.Database(databaseName, listOf(table))
             return fromTable(database, table)
         }
 
@@ -48,8 +48,8 @@ class LegendQL(database: Database, table: Table) {
          */
         fun db(databaseName: String, tables: Map<String, Map<String, KClass<*>>>): List<LegendQL> {
             return tables.map { (tableName, columns) ->
-                val table = Table(tableName, columns.toMutableMap())
-                val database = Database(databaseName, listOf(table))
+                val table = org.finos.legendql.kotlin.model.Table(tableName, columns.toMutableMap())
+                val database = org.finos.legendql.kotlin.model.Database(databaseName, listOf(table))
                 fromTable(database, table)
             }
         }
@@ -81,7 +81,7 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias = TableAlias(query.table)
         val expressions = columns(tableAlias)
         val expressionAndTable = Parser.parse(expressions, listOf(query.table), ParseType.SELECT)
-        query.addClause(SelectionClause(expressionAndTable.first))
+        query.addClause(SelectionClause(expressionAndTable.first as List<Expression>))
         query.updateTable(expressionAndTable.second)
         return this
     }
@@ -98,7 +98,7 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias = TableAlias(query.table)
         val expressions = columns(tableAlias)
         val expressionAndTable = Parser.parse(expressions, listOf(query.table), ParseType.EXTEND)
-        query.addClause(ExtendClause(expressionAndTable.first))
+        query.addClause(ExtendClause(expressionAndTable.first as List<Expression>))
         query.updateTable(expressionAndTable.second)
         return this
     }
@@ -132,7 +132,7 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias = TableAlias(query.table)
         val expression = condition(tableAlias)
         val expressionAndTable = Parser.parse(expression, listOf(query.table), ParseType.FILTER)
-        query.addClause(FilterClause(expressionAndTable.first))
+        query.addClause(FilterClause(expressionAndTable.first.first()))
         query.updateTable(expressionAndTable.second)
         return this
     }
@@ -152,7 +152,8 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias = TableAlias(query.table)
         val expression = aggregation(tableAlias)
         val expressionAndTable = Parser.parse(expression, listOf(query.table), ParseType.GROUP_BY)
-        query.addClause(GroupByClause(expressionAndTable.first))
+        val groupByExpr = expressionAndTable.first as GroupByExpression
+        query.addClause(GroupByClause(groupByExpr))
         query.updateTable(expressionAndTable.second)
         return this
     }
@@ -172,10 +173,11 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias2 = TableAlias(other.query.table)
         val (condition, columns) = joinCondition(tableAlias1, tableAlias2)
         val expressionAndTable = Parser.parse(Pair(condition, columns), listOf(query.table, other.query.table), ParseType.JOIN)
+        val joinExpr = expressionAndTable.first as JoinExpression
         query.addClause(JoinClause(
             FromClause(other.query.database.name, other.query.table.table),
             joinType,
-            JoinExpression(expressionAndTable.first)
+            joinExpr
         ))
         query.updateTable(expressionAndTable.second)
         return this
@@ -207,7 +209,7 @@ class LegendQL(database: Database, table: Table) {
         val tableAlias = TableAlias(query.table)
         val expressions = columns(tableAlias)
         val expressionAndTable = Parser.parse(expressions, listOf(query.table), ParseType.ORDER_BY)
-        query.addClause(OrderByClause(expressionAndTable.first as List<OrderType>))
+        query.addClause(OrderByClause(expressionAndTable.first.map { it as OrderType }))
         query.updateTable(expressionAndTable.second)
         return this
     }
@@ -257,7 +259,7 @@ class LegendQL(database: Database, table: Table) {
     /**
      * Get the table definition
      */
-    fun getTableDefinition(): Table {
+    fun getTableDefinition(): org.finos.legendql.kotlin.model.Table {
         return query.table
     }
 }
@@ -265,7 +267,7 @@ class LegendQL(database: Database, table: Table) {
 /**
  * Table alias for DSL expressions
  */
-class TableAlias(val table: Table) {
+class TableAlias(val table: org.finos.legendql.kotlin.model.Table) {
     /**
      * Get a column reference by name
      */
